@@ -4,13 +4,17 @@ Licensed under the MIT License; see the included LICENSE file.
 Component to manage a visual wake up alarm.
 """
 
-import time
-import logging
-
 from homeassistant.const import CONF_WEEKDAY, STATE_OFF, STATE_ON
-from homeassistant.helpers import validate_config
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event_decorators import track_time_change
 from homeassistant.components import light
+import time
+import logging
+import voluptuous as vol
+
+# Helpers for schema validation
+def Time(format='%H:%m'):
+  return lambda v: time.strptime(v, format)
 
 # Component domain; this is how configurations will refer to it.
 DOMAIN = "wake_alarm"
@@ -27,6 +31,12 @@ CONF_START_TIME = "start_time"
 
 """Stopping time for wake cycle. Must be presented in HH:MM format. Defaults to 08:00."""
 CONF_END_TIME = "end_time"
+
+COMPONENT_SCHEMA = vol.Schema({
+  vol.Required(CONF_PLATFORM): 'wake_alarm',
+  vol.Required(CONF_LIGHTS): cv.entity_ids,
+  vol.Optional(CONF_START_TIME, default="07:00"): vol.All(Time())
+})
 
 # Variable for storing configuration parameters.
 TARGET_ID = None
@@ -46,6 +56,10 @@ def setup(hass, config):
   global TARGET_ID
   global START_TIME_VALUE
   global END_TIME_VALUE
+
+  config_schema = vol.Schema({
+    vol.Required(CONF_LIGHTS): 
+  })
 
   # Validate that all required config options are given
   if not validate_config(config, {DOMAIN: [CONF_TARGET, CONF_START_TIME, CONF_END_TIME]}, _LOGGER):
